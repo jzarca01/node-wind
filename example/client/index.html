@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sign In page</title>
+    <script src="https://www.gstatic.com/firebasejs/5.10.1/firebase.js"></script>
+  </head>
+
+  <body>
+    <div class="inputBox">
+      <div id="app">
+        <h1>Firebase Phone Authentication + OTP</h1>
+        <div>
+          <p>Enter your phone number (ex: +33612345678)</p>
+          <input
+            type="text"
+            id="email_signin"
+            placeholder="Your phone number"
+          />
+          <button onclick="signIn()" id="sign-in-button">Sign In</button>
+        </div>
+        <div>
+          <p>Enter the verification code you received by SMS</p>
+          <input
+            type="text"
+            id="verify_code"
+            placeholder="Your verify number"
+          />
+          <button onclick="verify()" id="verify-button" disabled="true">
+            Verify
+          </button>
+        </div>
+        <div>
+          <p>Your Firebase token is :</p>
+          <p id="ft"></p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var config = {
+        apiKey: "AIzaSyCnEqcuGqglRwsRhqSytKL_dxRZ8MLMCf8",
+        authDomain: "localhost",
+        databaseURL: "https://project-8310935326617261567.firebaseio.com",
+        projectId: "project-8310935326617261567",
+        storageBucket: "project-8310935326617261567.appspot.com",
+        messagingSenderId: "713708576859"
+      };
+      firebase.initializeApp(config);
+      firebase.auth().useDeviceLanguage();
+
+      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+        "sign-in-button",
+        {
+          size: "invisible",
+          callback: function(response) {
+            console.log(response);
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
+            onSignInSubmit();
+          }
+        }
+      );
+
+      function signIn() {
+        var phoneNumber = document.getElementById("email_signin").value;
+        var appVerifier = window.recaptchaVerifier;
+        console.log(appVerifier.value);
+        firebase
+          .auth()
+          .signInWithPhoneNumber(phoneNumber, appVerifier)
+          .then(function(confirmationResult) {
+            window.confirmationResult = confirmationResult;
+            document.getElementById("verify-button").disabled = false;
+          })
+          .catch(function(error) {
+            console.log("error 1", error);
+          });
+      }
+
+      function verify() {
+        var code = document.getElementById("verify_code").value;
+        var ft = document.getElementById("ft");
+
+        var confirmationResult = window.confirmationResult;
+        confirmationResult
+          .confirm(code)
+          .then(function(result) {
+            var user = result.user;
+            console.log("user token", user.ra);
+            ft.innerText = user.ra;
+            return user;
+          })
+          .catch(function(error) {
+            console.log("err 2", error);
+          });
+      }
+    </script>
+  </body>
+</html>
